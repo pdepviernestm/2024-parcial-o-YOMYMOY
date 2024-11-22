@@ -1,0 +1,85 @@
+import personas.*
+import eventos.*
+import emociones.*
+
+describe "Personas" {
+
+    const ansiedadNahir = new Ansiedad(intensidad = 10)
+    const alegriaSara = new Alegria(intensidad = 50)
+    const furiaDaniel = new Furia(palabrotas=["recorcholis"])
+    const ansiedadDaniel = new Ansiedad(intensidad = 20)
+
+    const matias = new Persona(edad = 32)
+    const daniel = new Persona(edad = 18, emociones=#{furiaDaniel})
+    const nahir = new Persona(edad = 27, emociones=#{ansiedadNahir})
+    const sara = new Persona(edad = 9, emociones=#{alegriaSara})
+
+    const familia = new Grupo(personas=#{matias, daniel, nahir, sara})
+
+    const partido = new Evento(impacto = 10, descripcion="Racing en la final")
+    const examen = new Evento(impacto = 20, descripcion="Rendir examen pdep")
+    const cumpleanios = new Evento(impacto = 7, descripcion = "Cumplir años")
+  test "1. Una persona entre 12 y 19 años es adolescente" {
+    assert.that(daniel.esAdolescente())
+  }
+
+  test "1. Una persona que no tenga entre 12 y 19 años no es adolescente" {
+    assert.notThat(matias.esAdolescente())
+  }
+
+  test "2. Hacer que una persona tenga una nueva emoción, si tiene 0 pasa a tener 1" {
+    matias.agregarEmocion(new Furia(causa=""))
+    assert.equals(1, matias.emociones().size())
+  }
+
+  test "3. Puede explotar emocionalmente porque todas las emociones pueden liberarse" {
+    matias.agregarEmocion(new Furia(palabrotas=["recorcholis"]))
+    matias.agregarEmocion(new Alegria(intensidad=6))
+
+    assert.that(matias.estaPorExplotarEmocionalmente())
+  }
+
+  test "3. Puede explotar emocionalmente porque no todas las emociones pueden liberarse" {
+    matias.agregarEmocion(new Furia(palabrotas=["recorcholis"]))
+    matias.agregarEmocion(new Alegria(intensidad=6))
+    matias.agregarEmocion(new Ansiedad(intensidad = 10))
+
+    assert.notThat(matias.estaPorExplotarEmocionalmente())
+  }
+
+  test "4. Daniel vive un examen, su furia conoce una palabra así que queda en ninguna" {
+    daniel.agregarEmocion(ansiedadDaniel)
+    daniel.vivirEvento(examen)
+    nahir.vivirEvento(examen)
+
+    assert.that(furiaDaniel.palabrotas().isEmpty())
+    assert.equals(80, furiaDaniel.intensidad())
+    assert.equals("Rendir examen pdep", ansiedadDaniel.causa())
+    assert.equals(0, ansiedadDaniel.intensidad())
+  }
+
+  test "5. Se modifica el valor de la intensidad elevada de todas las emociones creadas que era 5, las emociones son creadas cuando se la agrega a una persona ya que cada una es individual" {
+    const furiaMatias = new Furia()
+    const ansiedadMatias = new Ansiedad(intensidad=10)
+    const tristezaDaniel = new Tristeza(intensidad=0)
+    
+    matias.agregarEmocion(furiaMatias)
+    matias.agregarEmocion(ansiedadMatias)
+    daniel.agregarEmocion(tristezaDaniel)
+
+    modificador.modificarValorIntensidadElevada(10)
+
+    assert.equals(10, furiaMatias.intensidadElevada())
+    assert.equals(10, ansiedadMatias.intensidadElevada())
+    assert.equals(10, tristezaDaniel.intensidadElevada())
+  }
+
+  test "6. La familia pasa por un partido y un cumpleaños, se modifican las intensidades de sus emociones" {
+    familia.vivirEvento(partido)
+    familia.vivirEvento(cumpleanios)
+    assert.equals(43, alegriaSara.intensidad())
+    assert.equals(1, ansiedadNahir.intensidad())
+    assert.equals("Cumplir años", ansiedadNahir.causa())
+    assert.that(furiaDaniel.palabrotas().isEmpty())
+  }
+}
